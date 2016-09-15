@@ -37,6 +37,13 @@ static struct thread *initial_thread;
 /* Lock used by allocate_tid(). */
 static struct lock tid_lock;
 
+/* Wait lock */
+static struct lock wait_lock;
+
+int old_priority;
+
+static struct list donation_list;
+
 /* Stack frame for kernel_thread(). */
 struct kernel_thread_frame 
   {
@@ -90,8 +97,10 @@ thread_init (void)
   ASSERT (intr_get_level () == INTR_OFF);
 
   lock_init (&tid_lock);
+  lock_init(&wait_lock)
   list_init (&ready_list);
   list_init (&all_list);
+  list_init (&donation_list);
 
   /* Set up a thread structure for the running thread. */
   initial_thread = running_thread ();
@@ -496,6 +505,17 @@ next_thread_to_run (void)
   if (list_empty (&ready_list))
     return idle_thread;
   else
+    if wait_lock != nil && ready_list != nil {
+		for ( i = list_begin(&ready_list); i != list_end(&ready_list);
+			  i = list_next(&ready_list) {
+			if i->priority < thread_current()->priority {
+				list_add
+			}	  
+		}
+    }
+
+
+
     return list_entry (list_pop_front (&ready_list), struct thread, elem);
 }
 
