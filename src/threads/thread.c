@@ -37,13 +37,6 @@ static struct thread *initial_thread;
 /* Lock used by allocate_tid(). */
 static struct lock tid_lock;
 
-/* Wait lock */
-static struct lock wait_lock;
-
-int old_priority;
-
-static struct list donation_list;
-
 /* Stack frame for kernel_thread(). */
 struct kernel_thread_frame 
   {
@@ -97,16 +90,15 @@ thread_init (void)
   ASSERT (intr_get_level () == INTR_OFF);
 
   lock_init (&tid_lock);
-  lock_init(&wait_lock)
   list_init (&ready_list);
   list_init (&all_list);
-  list_init (&donation_list);
 
   /* Set up a thread structure for the running thread. */
   initial_thread = running_thread ();
   init_thread (initial_thread, "main", PRI_DEFAULT);
   initial_thread->status = THREAD_RUNNING;
   initial_thread->tid = allocate_tid ();
+
 }
 
 /* Starts preemptive thread scheduling by enabling interrupts.
@@ -352,7 +344,63 @@ thread_foreach (thread_action_func *func, void *aux)
 void
 thread_set_priority (int new_priority) 
 {
-  thread_current ()->priority = new_priority;
+  enum intr_level old_level;
+  struct thread *t = thread_current();
+  
+  ASSERT (is_thread (t));
+  
+  old_level = intr_disable ();
+  
+  /* Store old priority for later use */
+  int old_priority = t->priority;
+  
+  /* Set new priority */
+  t->priority = new_priority;
+  
+  //t->priority = t->init_priority;
+  
+  /* Continue doing what you doing if no donations */
+  if (list_empty(&t->donations_list)) 
+  {
+  		return;
+  }
+  
+  struct thread *child_t = list_entry(list_front(&t->donations_list),
+  							struct thread, donation_elem);
+  if (child_t->priority > t-> priority) {
+  	t->priority = child_t->priority;
+  }
+  
+  /* Donate priority */
+  if (old_priority < t-> priority) {
+  	donate_priority();
+  }
+	
+  intr_set_level(old_level);
+	    
+}
+
+void
+donate_priority (void) 
+{
+   struct thread *t = thread_current();
+   struct lock *l = t->wait_lock;
+   int donations = 0;
+   while (l && donations < DONATIONS_LIMIT) {
+   		donations ++;
+   		
+   		if (!l->holder) {
+   			return; 
+   		}
+   		
+   		if (l->holder->priority >= t->priority) {
+   			return;
+   		}
+   		
+   		l->holder->priority = t-> priority;
+   		t = l->holder;
+   		l = t->wait_lock;
+   	}
 }
 
 /* Returns the current thread's priority. */
@@ -479,6 +527,11 @@ init_thread (struct thread *t, const char *name, int priority)
   t->priority = priority;
   t->magic = THREAD_MAGIC;
   list_push_back (&all_list, &t->allelem);
+
+  t->init_priority = priority;
+  t->wait_lock = NULL;
+  list_init(&t->donations_list);
+	
 }
 
 /* Allocates a SIZE-byte frame at the top of thread T's stack and
@@ -505,17 +558,6 @@ next_thread_to_run (void)
   if (list_empty (&ready_list))
     return idle_thread;
   else
-    if wait_lock != nil && ready_list != nil {
-		for ( i = list_begin(&ready_list); i != list_end(&ready_list);
-			  i = list_next(&ready_list) {
-			if i->priority < thread_current()->priority {
-				list_add
-			}	  
-		}
-    }
-
-
-
     return list_entry (list_pop_front (&ready_list), struct thread, elem);
 }
 
