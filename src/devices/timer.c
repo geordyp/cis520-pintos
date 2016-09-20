@@ -85,15 +85,23 @@ timer_elapsed (int64_t then)
 }
 
 /* Sleeps for approximately TICKS timer ticks.  Interrupts must
-   be turned on. */
+   be turned on.
+   Modified Proj1
+   (Modification based on solution found at:
+   knowledgejunk.net/2011/05/06/avoiding-busy-wait-in-timer_sleep-on-pintos/)*/
 void
 timer_sleep (int64_t ticks) 
 {
-  int64_t start = timer_ticks ();
-
-  ASSERT (intr_get_level () == INTR_ON);
-  while (timer_elapsed (start) < ticks) 
-    thread_yield ();
+  thread_current ()->sleepticks = ticks;	/* set the sleepticks parameter	*/
+  ASSERT (intr_get_level () == INTR_ON);	/* ensure interrupts are on	*/
+  enum intr_level old = intr_disable ();	/* disable interrupts, save old 
+						   interrupt level		*/
+  thread_block();				/* block current thread
+						   (note, this will immediately
+						   cause a call to thread_yield
+						   which will run other threads
+						   until sleepticks expires)	*/
+  intr_set_level (old);				/* restor previous intr level	*/
 }
 
 /* Sleeps for approximately MS milliseconds.  Interrupts must be

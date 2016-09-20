@@ -199,7 +199,10 @@ lock_acquire (struct lock *lock)
   ASSERT (!lock_held_by_current_thread (lock));
 
   sema_down (&lock->semaphore);
+<<<<<<< HEAD
 
+=======
+>>>>>>> 24aaf80e726f2f261dc008e2d06f4b6762727b65
   lock->holder = thread_current ();
 }
 
