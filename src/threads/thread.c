@@ -80,6 +80,7 @@ bool thread_lower_priority (struct list_elem *, struct list_elem *, void *aux);
 void thread_donate_priority (int, struct thread *);
 void thread_restore_priority (struct thread *);
 
+
 /* Initializes the threading system by transforming the code
    that's currently running into a thread.  This can't work in
    general and it is possible in this case only because loader.S
@@ -366,6 +367,8 @@ thread_foreach (thread_action_func *func, void *aux)
     }
 }
 
+<<<<<<< HEAD
+=======
 /* Invokes function 'func' on all threads in 'list', passing along 'aux'.
    This function must be called with interrupts off.
    This functions is designed to work on synch.c, it should probably not be called
@@ -388,6 +391,7 @@ thread_foreach_list (struct list *list, thread_action_func *func, void *aux)
     }
 }
 
+>>>>>>> 24aaf80e726f2f261dc008e2d06f4b6762727b65
 /* Invoke function 'func' on all blocked threads. Does NOT pass 'aux'
    This function must be called with interrupts off.
    Added Proj1 */
@@ -419,12 +423,26 @@ thread_update_sleep (struct thread *t, void *aux)
     thread_unblock(t);
 }
 
+<<<<<<< HEAD
+/* Donates priority 'p' to the current thread. 
+   If the priority is greater than 'p', 'p' is 
+   ignored. Otherwise, 'p' will be stored as the 
+   priority. 
+   Modified Proj1 */
+void
+thread_set_priority (int new_priority) 
+{
+  struct thread *t = thread_current ()->priority;
+  if (t->priority < new_priority)
+    t->priority = new_priority;
+=======
 /* Sets the current thread's priority to NEW_PRIORITY. */
 void
 thread_set_priority (int new_priority) 
 {
   thread_current ()->priority = new_priority;
   thread_current ()->orig_pri = new_priority;
+>>>>>>> 24aaf80e726f2f261dc008e2d06f4b6762727b65
 }
 
 /* Returns the current thread's priority. */
@@ -671,6 +689,12 @@ thread_lower_priority (struct list_elem *a, struct list_elem *b,
     return false;
 }
 
+<<<<<<< HEAD
+/* Restores the original priority of thread 't'.
+   Added Proj1 */
+void
+thread_restore_priority (struct thread *t, void *aux)
+=======
 /* Donates priority 'p' to thread 't'. If the current
    priority of 't' is greater than 'p', 'p' is 
    ignored. Otherwise, 'p' will be stored as the 
@@ -687,6 +711,7 @@ thread_donate_priority (int p, struct thread *t)
    Added Proj1 */
 void
 thread_restore_priority (struct thread *t)
+>>>>>>> 24aaf80e726f2f261dc008e2d06f4b6762727b65
 {
   t->priority = t->orig_pri;
 }
