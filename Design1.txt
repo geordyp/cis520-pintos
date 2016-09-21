@@ -18,6 +18,8 @@ Geordy Williams geordyp@ksu.edu
 >> Please cite any offline or online sources you consulted while
 >> preparing your submission, other than the Pintos documentation,
 >> course text, lecture notes, and course staff.
+- knowledgejunk.net/2011/05/06/avoiding-busy-wait-in-timer_sleep-on-pintos/
+- Other links...
 
 
                  ALARM CLOCK
@@ -28,21 +30,39 @@ Geordy Williams geordyp@ksu.edu
 >> A1: Copy here the declaration of each new or changed `struct' or
 >> `struct' member, global or static variable, `typedef', or
 >> enumeration.  Identify the purpose of each in 25 words or less.
-- struct thread -> add “sleepticks” which specifies how long the thread should sleep
+- thread.h:
+    * Added: int64_t sleepticks;
+        Specifies how long the thread should sleep
+
+- thread.c:
+    * Modified: void thread_tick(void);
+        Call thread_foreach_blocked()
+    * Added: void thread_foreach_blocked (thread_action_func *func, void *aux);
+        Invoke funtion 'func' on all blocked threads
+    * Added: void thread_doif_blocked (struct thread *t, thread_action_func *func);
+        Invoke function 'func' on thread 't' if and only if 't' is currently
+        blocked
+    * Added: void thread_update_sleep (struct thread *, void *);
+        Updates sleep parameters of thread 't'. If 't' should be woken up,
+        this function will unblock it.
+
+- timer.c:
+    * Modified: void timer_sleep (int64_t ticks);
+        First we save the interrupt level and turn interrupts off, then set
+        sleepticks, block current thread which immediately yields to next thread,
+        and finally restore the old interrupt level.
 
 ---- ALGORITHMS ----
 
 >> A2: Briefly describe what happens in a call to your timer_sleep(),
 >> including the effects of the timer interrupt handler.
-- Turn off interrupts
-- Set “sleepticks”
-- Block the current thread which immediately yields to next thread
-- Restore interrupt level
+  We turn off interrupts, then set “sleepticks”, then block the current thread
+  which immediately yields to next thread. Finally, we restore the interrupt level.
 
 >> A3: What steps are taken to minimize the amount of time spent in
 >> the timer interrupt handler?
 Aside from the condition which checks which threads are blocked, we only use the
-cpu to update the sleep ticks for blocked threads
+CPU to update the sleep ticks for blocked threads.
 
 ---- SYNCHRONIZATION ----
 
@@ -52,13 +72,14 @@ Blocking the thread avoids race conditions
 
 >> A5: How are race conditions avoided when a timer interrupt occurs
 >> during a call to timer_sleep()?
-Interrupts are turned off at the top of the function to avoid when a timer interrupt occurs
+Interrupts are turned off at the top of the function to avoid when a timer
+interrupt occurs
 
 ---- RATIONALE ----
 
 >> A6: Why did you choose this design?  In what ways is it superior to
 >> other designs that you considered?
-
+TODO: ??
 
 
              PRIORITY SCHEDULING
@@ -69,9 +90,27 @@ Interrupts are turned off at the top of the function to avoid when a timer inter
 >> B1: Copy here the declaration of each new or changed `struct' or
 >> `struct' member, global or static variable, `typedef', or
 >> enumeration.  Identify the purpose of each in 25 words or less.
+- thread.c:
+  * Modified: void thread_unblock(struct thread *t);
+              void thread_yield(void);
+      Instead of list_push_back, we use list_insert_order() based on
+      thread_lower_priority which ensures that the next thread that should run
+      is always at the front of the list based on priority and round-robin
+      parameters.
+
+  * Added: bool thread_lower_priority(struct list_elem *a, struct list_elem *b,
+                                      void *aux);
+     Determines whether or not the thread located at element A is a lower
+     priority than B (granted A is the thread containing list element 'a' and B
+     is the thread containing list element 'b').
+     Returns true if priority of A < priority of B, false otherwise.
+
 
 >> B2: Explain the data structure used to track priority donation.
-
+    Have a lock acquire a priority when it is acquired. When a new thread
+    acquires the lock, it will get that priority donated to it until it releases
+    the lock. If the donated priority is lower than a donation already given,
+    it is ignored.
 
 ---- ALGORITHMS ----
 
@@ -84,16 +123,24 @@ Interrupts are turned off at the top of the function to avoid when a timer inter
 >> B5: Describe the sequence of events when lock_release() is called
 >> on a lock that a higher-priority thread is waiting for.
 
+
 ---- SYNCHRONIZATION ----
 
 >> B6: Describe a potential race in thread_set_priority() and explain
 >> how your implementation avoids it.  Can you use a lock to avoid
 >> this race?
+If a current thread's priority is donated, the donated priority will be
+overwritten by the new one and there is going to be a confusion. Not only will
+this potentially result a race condition, it could also lead to starvation.
+
 
 ---- RATIONALE ----
 
 >> B7: Why did you choose this design?  In what ways is it superior to
 >> another design you considered?
+This design seemed the most straightforward to handle priority inversion. In
+terms of multi threading, it is more efficient than the previous implementation.
+This solution also makes sure that there is no race condition.
 
 
               ADVANCED SCHEDULER [EXTRA CREDIT]
