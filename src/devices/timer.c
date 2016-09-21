@@ -92,8 +92,10 @@ timer_elapsed (int64_t then)
 void
 timer_sleep (int64_t ticks) 
 {
+  if (ticks < 1)
+    return;
   thread_current ()->sleepticks = ticks;	/* set the sleepticks parameter	*/
-  ASSERT (intr_get_level () == INTR_ON);	/* ensure interrupts are on	*/
+  intr_set_level (INTR_ON);			/* ensure interrupts are on	*/
   enum intr_level old = intr_disable ();	/* disable interrupts, save old 
 						   interrupt level		*/
   thread_block();				/* block current thread

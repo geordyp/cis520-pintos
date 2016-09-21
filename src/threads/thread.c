@@ -77,9 +77,7 @@ void thread_foreach_blocked (thread_action_func *, void *);
 void thread_doif_blocked (struct thread *, thread_action_func *);
 void thread_update_sleep (struct thread *, void *);
 bool thread_lower_priority (struct list_elem *, struct list_elem *, void *aux);
-void thread_donate_priority (int, struct thread *);
-void thread_restore_priority (struct thread *);
-
+void print_thread (struct thread *);
 
 /* Initializes the threading system by transforming the code
    that's currently running into a thread.  This can't work in
@@ -257,14 +255,9 @@ thread_unblock (struct thread *t)
   ASSERT (is_thread (t));
 
   old_level = intr_disable ();
+  if (t->status != THREAD_BLOCKED)
+    return;
   ASSERT (t->status == THREAD_BLOCKED);
-  
-  /* Set the sleepticks parameter to 0 in case the next time
-     this thread is not blocked for timer purposes. This
-     prevents a call to thread_block outside timer context
-     to immediately unblock the thread.
-     Added Proj1 */
-  t->sleepticks = 0;
 
   /* Insert the element into the ready list based on thread_lower_priority
      which is described below.
@@ -367,31 +360,6 @@ thread_foreach (thread_action_func *func, void *aux)
     }
 }
 
-<<<<<<< HEAD
-=======
-/* Invokes function 'func' on all threads in 'list', passing along 'aux'.
-   This function must be called with interrupts off.
-   This functions is designed to work on synch.c, it should probably not be called
-   outside the context of synch.c, or for lists which do not store
-   list element 'elem', defined in struct thread.
-   Added Proj1 */
-void
-thread_foreach_list (struct list *list, thread_action_func *func, void *aux)
-{
-  struct list_elem *e
-  
-  ASSERT (intr_get_level () == INTR_OFF);
-  ASSERT (!list_empty (list));
-
-  for (e = list_begin (list); e != list_end (list);
-       e = list_next (e))
-    {
-      struct thread *t = list_entry (e, struct thread, elem);
-      func (t, aux);
-    }
-}
-
->>>>>>> 24aaf80e726f2f261dc008e2d06f4b6762727b65
 /* Invoke function 'func' on all blocked threads. Does NOT pass 'aux'
    This function must be called with interrupts off.
    Added Proj1 */
@@ -399,6 +367,23 @@ void
 thread_foreach_blocked (thread_action_func *func, void *aux)
 {
   thread_foreach (&thread_doif_blocked, func);
+}
+
+/* Invoke function 'func' on all threads in the given list, passing along 'aux'.
+   This function must be called with interrupts off. */
+void
+thread_foreach_list (struct list *list, thread_action_func *func, void *aux)
+{
+  struct list_elem *e;
+
+  ASSERT (intr_get_level () == INTR_OFF);
+
+  for (e = list_begin (list); e != list_end (list);
+       e = list_next (e))
+    {
+      struct thread *t = list_entry (e, struct thread, elem);
+      func (t, aux);
+    }
 }
 
 /* Invoke function 'func' on thread 't' iff 't' is currently
@@ -418,31 +403,18 @@ void
 thread_update_sleep (struct thread *t, void *aux)
 {
   ASSERT (t->status == THREAD_BLOCKED)
-  t->sleepticks--;
-  if (t->sleepticks == 1)
+  if (t->sleepticks > 1)
+    t->sleepticks--;
+  else if (t->sleepticks == 1)
     thread_unblock(t);
 }
 
-<<<<<<< HEAD
-/* Donates priority 'p' to the current thread. 
-   If the priority is greater than 'p', 'p' is 
-   ignored. Otherwise, 'p' will be stored as the 
-   priority. 
-   Modified Proj1 */
-void
-thread_set_priority (int new_priority) 
-{
-  struct thread *t = thread_current ()->priority;
-  if (t->priority < new_priority)
-    t->priority = new_priority;
-=======
 /* Sets the current thread's priority to NEW_PRIORITY. */
 void
 thread_set_priority (int new_priority) 
 {
   thread_current ()->priority = new_priority;
-  thread_current ()->orig_pri = new_priority;
->>>>>>> 24aaf80e726f2f261dc008e2d06f4b6762727b65
+  thread_yield ();
 }
 
 /* Returns the current thread's priority. */
@@ -569,7 +541,9 @@ init_thread (struct thread *t, const char *name, int priority)
   t->priority = priority;
 
   /* Added Proj1 */
-  t->orig_pri = priority;
+  t->org_pri = priority;
+  for (int i = 0; i < 8; i++)
+    t->priority_list[i] = -1;
 
   t->magic = THREAD_MAGIC;
   list_push_back (&all_list, &t->allelem);
@@ -669,13 +643,14 @@ schedule (void)
   if (cur != next)
     prev = switch_threads (cur, next);
   thread_schedule_tail (prev);
+  
 }
 
 /* Determines whether or not the thread located at element A is
    a lower priority than B (granted A is the thread containing
    list element 'a' and B is the thread containing list element
    'b').
-   Returns true if priority of A < priority of B, false otherwise.
+   Returns true if priority of B < priority of A, false otherwise.
    Added Proj1 */
 bool
 thread_lower_priority (struct list_elem *a, struct list_elem *b,
@@ -683,37 +658,60 @@ thread_lower_priority (struct list_elem *a, struct list_elem *b,
 {
   struct thread *ta = list_entry (a, struct thread, elem);
   struct thread *tb = list_entry (b, struct thread, elem);
-  if (ta->priority < tb->priority)
+  if (tb->priority < ta->priority)
     return true;
   else
     return false;
 }
 
-<<<<<<< HEAD
-/* Restores the original priority of thread 't'.
+/* Donates priority 'p' to thread 't'. If the priority or
+   donated priority of 't' is greater than 'p', 'p' is 
+   ignored. Otherwise, the original priority of 't' is
+   stored and 'p' takes priority. */
+void
+thread_donate_priority (struct thread *t, int *p)
+{
+  int i = 0;
+  while ((i < 8) && (t->priority_list[i] != -1))
+    i++;
+  if (i == 8)
+    return;
+  t->priority_list[i] = *p;
+  if (*p > t-> priority)
+    t->priority = *p;
+}
+
+/* Restores the original priority to thread 't'
    Added Proj1 */
 void
 thread_restore_priority (struct thread *t, void *aux)
-=======
-/* Donates priority 'p' to thread 't'. If the current
-   priority of 't' is greater than 'p', 'p' is 
-   ignored. Otherwise, 'p' will be stored as the 
-   priority. 
-   Added Proj1 */
-void
-thread_donate_priority (int p, struct thread *t)
 {
-  if (t->priority < p)
-    t->priority = p;
+  int i = 7;
+  while ((t->priority_list[i] == -1) && (i >= 0))
+    i--;
+  if (i == -1)
+    t->priority = t->org_pri;
+  else
+  {
+    t->priority_list[i] = -1;
+    int x = 0;
+    for (int i = 0; i < 8; i++)
+    {
+      if (x < t->priority_list[i])
+        {
+          x = t->priority_list[i];
+        }
+    }
+    t->priority = x;
+    t->priority_list[i] = -1;
+  }
 }
 
-/* Restores the original priority of thread 't'.
-   Added Proj1 */
+
 void
-thread_restore_priority (struct thread *t)
->>>>>>> 24aaf80e726f2f261dc008e2d06f4b6762727b65
+print_thread (struct thread *t)
 {
-  t->priority = t->orig_pri;
+  printf ("Thread: %s, Priority: %d.\n", t->name, t->priority);
 }
 
 /* Returns a tid to use for a new thread. */
