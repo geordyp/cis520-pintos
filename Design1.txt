@@ -19,7 +19,6 @@ Geordy Williams geordyp@ksu.edu
 >> preparing your submission, other than the Pintos documentation,
 >> course text, lecture notes, and course staff.
 - knowledgejunk.net/2011/05/06/avoiding-busy-wait-in-timer_sleep-on-pintos/
-- Other links...
 
 
                  ALARM CLOCK
@@ -79,7 +78,11 @@ interrupt occurs
 
 >> A6: Why did you choose this design?  In what ways is it superior to
 >> other designs that you considered?
-TODO: ??
+We ultimately needed to avoid using the loop which would continuously
+check if the thread had been asleep for enough time. So our solution
+involved saving the amount of sleep ticks, then decrementing that value
+each time timer_interrupt() was called until it reached zero and the
+thread should be unblocked. We didn't consider other designs.
 
 
              PRIORITY SCHEDULING
@@ -116,12 +119,21 @@ TODO: ??
 
 >> B3: How do you ensure that the highest priority thread waiting for
 >> a lock, semaphore, or condition variable wakes up first?
+Not implemented.
 
 >> B4: Describe the sequence of events when a call to lock_acquire()
 >> causes a priority donation.  How is nested donation handled?
+Embedded in the lock is a sempahore. In the semaphore, when sema_down is called,
+all the waiters have the priority of the thread donated to them,
+then in sema_up, all those threads are instructed to restore their previous
+priority. Nested donation is handled by a array of integers of size 8 and each
+donation is stored in ascending order.
 
 >> B5: Describe the sequence of events when lock_release() is called
 >> on a lock that a higher-priority thread is waiting for.
+When lock_release() is called, the lock holder is set to NULL. Have all the
+waiting threads' priority restored, then the first element of the list of waiters
+gets popped off and gets added to the ready list.
 
 
 ---- SYNCHRONIZATION ----
