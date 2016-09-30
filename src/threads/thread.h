@@ -90,10 +90,6 @@ struct thread
     int priority;                       /* Priority. */
     struct list_elem allelem;           /* List element for all threads list. */
 
-    /* Added Proj1 */
-    int64_t sleepticks;	/* The number of ticks for the thread to sleep */
-    int orig_pri;	/* The original priority of this thread. */
-
     /* Shared between thread.c and synch.c. */
     struct list_elem elem;              /* List element. */
 
@@ -137,12 +133,6 @@ void thread_foreach (thread_action_func *, void *);
 int thread_get_priority (void);
 void thread_set_priority (int);
 
-<<<<<<< HEAD
-/* Added Proj 1 */
-void thread_restore_priority (struct thread *, void *);
-
-=======
->>>>>>> 24aaf80e726f2f261dc008e2d06f4b6762727b65
 int thread_get_nice (void);
 void thread_set_nice (int);
 int thread_get_recent_cpu (void);
