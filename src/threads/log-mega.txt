@@ -23,9 +23,9 @@ Executing 'alarm-mega':
 (alarm-mega) thread 1: duration=20, iteration=1, product=20
 (alarm-mega) thread 0: duration=10, iteration=3, product=30
 (alarm-mega) thread 2: duration=30, iteration=1, product=30
+(alarm-mega) thread 3: duration=40, iteration=1, product=40
 (alarm-mega) thread 0: duration=10, iteration=4, product=40
 (alarm-mega) thread 1: duration=20, iteration=2, product=40
-(alarm-mega) thread 3: duration=40, iteration=1, product=40
 (alarm-mega) thread 0: duration=10, iteration=5, product=50
 (alarm-mega) thread 4: duration=50, iteration=1, product=50
 (alarm-mega) thread 0: duration=10, iteration=6, product=60
@@ -48,9 +48,15 @@ Executing 'alarm-mega':
 (alarm-mega) thread 0: duration=10, iteration=13, product=130
 (alarm-mega) thread 0: duration=10, iteration=14, product=140
 (alarm-mega) thread 1: duration=20, iteration=7, product=140
+<<<<<<< HEAD
 (alarm-mega) thread 2: duration=30, iteration=5, product=150
 (alarm-mega) thread 4: duration=50, iteration=3, product=150
 (alarm-mega) thread 0: duration=10, iteration=15, product=150
+=======
+(alarm-mega) thread 0: duration=10, iteration=15, product=150
+(alarm-mega) thread 2: duration=30, iteration=5, product=150
+(alarm-mega) thread 4: duration=50, iteration=3, product=150
+>>>>>>> b887a5bf2a0394f3c656e98dea1a17309b14b518
 (alarm-mega) thread 3: duration=40, iteration=4, product=160
 (alarm-mega) thread 0: duration=10, iteration=16, product=160
 (alarm-mega) thread 1: duration=20, iteration=8, product=160
@@ -120,6 +126,7 @@ Executing 'alarm-mega':
 (alarm-mega) thread 4: duration=50, iteration=9, product=450
 (alarm-mega) thread 0: duration=10, iteration=45, product=450
 (alarm-mega) thread 2: duration=30, iteration=15, product=450
+<<<<<<< HEAD
 (alarm-mega) thread 1: duration=20, iteration=23, product=460
 (alarm-mega) thread 0: duration=10, iteration=46, product=460
 (alarm-mega) thread 0: duration=10, iteration=47, product=470
@@ -127,6 +134,15 @@ Executing 'alarm-mega':
 (alarm-mega) thread 1: duration=20, iteration=24, product=480
 (alarm-mega) thread 2: duration=30, iteration=16, product=480
 (alarm-mega) thread 3: duration=40, iteration=12, product=480
+=======
+(alarm-mega) thread 0: duration=10, iteration=46, product=460
+(alarm-mega) thread 1: duration=20, iteration=23, product=460
+(alarm-mega) thread 0: duration=10, iteration=47, product=470
+(alarm-mega) thread 3: duration=40, iteration=12, product=480
+(alarm-mega) thread 0: duration=10, iteration=48, product=480
+(alarm-mega) thread 1: duration=20, iteration=24, product=480
+(alarm-mega) thread 2: duration=30, iteration=16, product=480
+>>>>>>> b887a5bf2a0394f3c656e98dea1a17309b14b518
 (alarm-mega) thread 0: duration=10, iteration=49, product=490
 (alarm-mega) thread 4: duration=50, iteration=10, product=500
 (alarm-mega) thread 0: duration=10, iteration=50, product=500
@@ -208,9 +224,15 @@ Executing 'alarm-mega':
 (alarm-mega) thread 2: duration=30, iteration=31, product=930
 (alarm-mega) thread 1: duration=20, iteration=47, product=940
 (alarm-mega) thread 4: duration=50, iteration=19, product=950
+<<<<<<< HEAD
 (alarm-mega) thread 1: duration=20, iteration=48, product=960
 (alarm-mega) thread 2: duration=30, iteration=32, product=960
 (alarm-mega) thread 3: duration=40, iteration=24, product=960
+=======
+(alarm-mega) thread 3: duration=40, iteration=24, product=960
+(alarm-mega) thread 1: duration=20, iteration=48, product=960
+(alarm-mega) thread 2: duration=30, iteration=32, product=960
+>>>>>>> b887a5bf2a0394f3c656e98dea1a17309b14b518
 (alarm-mega) thread 1: duration=20, iteration=49, product=980
 (alarm-mega) thread 2: duration=30, iteration=33, product=990
 (alarm-mega) thread 1: duration=20, iteration=50, product=1000
@@ -262,8 +284,13 @@ Executing 'alarm-mega':
 (alarm-mega) thread 4: duration=50, iteration=27, product=1350
 (alarm-mega) thread 3: duration=40, iteration=34, product=1360
 (alarm-mega) thread 1: duration=20, iteration=68, product=1360
+<<<<<<< HEAD
 (alarm-mega) thread 1: duration=20, iteration=69, product=1380
 (alarm-mega) thread 2: duration=30, iteration=46, product=1380
+=======
+(alarm-mega) thread 2: duration=30, iteration=46, product=1380
+(alarm-mega) thread 1: duration=20, iteration=69, product=1380
+>>>>>>> b887a5bf2a0394f3c656e98dea1a17309b14b518
 (alarm-mega) thread 3: duration=40, iteration=35, product=1400
 (alarm-mega) thread 4: duration=50, iteration=28, product=1400
 (alarm-mega) thread 1: duration=20, iteration=70, product=1400

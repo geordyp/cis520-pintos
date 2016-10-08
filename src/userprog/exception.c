@@ -148,7 +148,8 @@ page_fault (struct intr_frame *f)
   write = (f->error_code & PF_W) != 0;
   user = (f->error_code & PF_U) != 0;
 
-  /* Try to access a kernel address in user mode. */
+
+ /* Try to access a kernel address in user mode. */
   if ( (user && !is_user_vaddr (fault_addr) ))
       sys_t_exit (-1);
   if (!user) 
@@ -156,6 +157,8 @@ page_fault (struct intr_frame *f)
     f->eip = (void *) f->eax;
     f->eax = 0xffffffff;
   }
+
+
 
   /* To implement virtual memory, delete the rest of the function
      body, and replace it with code that brings in the page to
@@ -167,6 +170,7 @@ page_fault (struct intr_frame *f)
           user ? "user" : "kernel");
   kill (f);
 }
+
 
 static bool
 check_user_isvalid(const uint8_t *uaddr)
@@ -204,3 +208,5 @@ put_user (uint8_t *udst, uint8_t byte)
   : "=&a" (error_code), "=m" (*udst) : "q" (byte));
    return error_code != -1;
  }
+
+

@@ -98,6 +98,10 @@ thread_init (void)
   init_thread (initial_thread, "main", PRI_DEFAULT);
   initial_thread->status = THREAD_RUNNING;
   initial_thread->tid = allocate_tid ();
+<<<<<<< HEAD
+=======
+
+>>>>>>> b887a5bf2a0394f3c656e98dea1a17309b14b518
 }
 
 /* Starts preemptive thread scheduling by enabling interrupts.
@@ -343,7 +347,67 @@ thread_foreach (thread_action_func *func, void *aux)
 void
 thread_set_priority (int new_priority) 
 {
+<<<<<<< HEAD
   thread_current ()->priority = new_priority;
+=======
+  enum intr_level old_level;
+  struct thread *t = thread_current();
+  
+  ASSERT (is_thread (t));
+  
+  old_level = intr_disable ();
+  
+  /* Store old priority for later use */
+  int old_priority = t->priority;
+  
+  /* Set new priority */
+  t->priority = new_priority;
+  
+  //t->priority = t->init_priority;
+  
+  /* Continue doing what you doing if no donations */
+  if (list_empty(&t->donations_list)) 
+  {
+  		return;
+  }
+  
+  struct thread *child_t = list_entry(list_front(&t->donations_list),
+  							struct thread, donation_elem);
+  if (child_t->priority > t-> priority) {
+  	t->priority = child_t->priority;
+  }
+  
+  /* Donate priority */
+  if (old_priority < t-> priority) {
+  	donate_priority();
+  }
+	
+  intr_set_level(old_level);
+	    
+}
+
+void
+donate_priority (void) 
+{
+   struct thread *t = thread_current();
+   struct lock *l = t->wait_lock;
+   int donations = 0;
+   while (l && donations < DONATIONS_LIMIT) {
+   		donations ++;
+   		
+   		if (!l->holder) {
+   			return; 
+   		}
+   		
+   		if (l->holder->priority >= t->priority) {
+   			return;
+   		}
+   		
+   		l->holder->priority = t-> priority;
+   		t = l->holder;
+   		l = t->wait_lock;
+   	}
+>>>>>>> b887a5bf2a0394f3c656e98dea1a17309b14b518
 }
 
 /* Returns the current thread's priority. */
@@ -470,6 +534,14 @@ init_thread (struct thread *t, const char *name, int priority)
   t->priority = priority;
   t->magic = THREAD_MAGIC;
   list_push_back (&all_list, &t->allelem);
+<<<<<<< HEAD
+=======
+
+  t->init_priority = priority;
+  t->wait_lock = NULL;
+  list_init(&t->donations_list);
+	
+>>>>>>> b887a5bf2a0394f3c656e98dea1a17309b14b518
 }
 
 /* Allocates a SIZE-byte frame at the top of thread T's stack and

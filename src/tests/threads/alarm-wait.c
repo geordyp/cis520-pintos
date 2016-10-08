@@ -36,7 +36,6 @@ test_alarm_mega (void)
   test_sleep(5, 70);
 }
 
-
 /* Information about the test. */
 struct sleep_test 
   {
