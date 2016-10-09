@@ -40,7 +40,7 @@ syscall_handler (struct intr_frame *f UNUSED)
 static void
 sys_halt (void)
 {
-  return 0;
+  shutdown_power_off();
 }
 
 /* sys_exit() - Terminates the current user program,
