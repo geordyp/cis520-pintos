@@ -50,7 +50,7 @@ sys_halt (void)
 static void
 sys_exit (int status)
 {
-  thread_exit ();
+  thread_exit (status);
 }
 
 /* sys_exec() - Runs the executable whoe name is
