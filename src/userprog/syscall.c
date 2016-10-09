@@ -30,6 +30,7 @@ syscall_init (void)
 static void
 syscall_handler (struct intr_frame *f UNUSED) 
 {
+  // TODO
   printf ("system call!\n");
   thread_exit ();
 }
@@ -40,7 +41,7 @@ syscall_handler (struct intr_frame *f UNUSED)
 static void
 sys_halt (void)
 {
-  shutdown_power_off();
+  shutdown_power_off ();
 }
 
 /* sys_exit() - Terminates the current user program,
@@ -49,7 +50,7 @@ sys_halt (void)
 static void
 sys_exit (int status)
 {
-  return 0;
+  thread_exit ();
 }
 
 /* sys_exec() - Runs the executable whoe name is
@@ -60,6 +61,7 @@ sys_exit (int status)
 static pid_t
 sys_exec (const char *cmd_line)
 {
+  // TODO
   return 0;
 }
 
@@ -69,6 +71,7 @@ sys_exec (const char *cmd_line)
 static int
 sys_wait (pid_t pid)
 {
+  // TODO
   return 0;
 }
 
@@ -79,6 +82,7 @@ sys_wait (pid_t pid)
 static int
 sys_create (const char *file, unsigned initial_size)
 {
+  // TODO
   return 0;
 }
 
@@ -88,6 +92,7 @@ sys_create (const char *file, unsigned initial_size)
 static bool
 sys_remove (const char *file)
 {
+  // TODO
   return 0;
 }
 
@@ -99,6 +104,7 @@ sys_remove (const char *file)
 static int
 sys_open (const char *file)
 {
+  // TODO
   return 0;
 }
 
@@ -108,6 +114,7 @@ sys_open (const char *file)
 static int
 sys_filesize (int fd)
 {
+  // TODO
   return 0;
 }
 
@@ -119,6 +126,7 @@ sys_filesize (int fd)
 static int
 sys_read (int fd)
 {
+  // TODO
   return 0;
 }
 
@@ -131,6 +139,7 @@ sys_read (int fd)
 static int
 sys_write (int fd, const void *buffer, unsigned size)
 {
+  // TODO
   return 0;
 }
 
@@ -142,6 +151,7 @@ sys_write (int fd, const void *buffer, unsigned size)
 static void
 sys_seek (int fd, unsigned position)
 {
+  // TODO
   return 0;
 }
 
@@ -153,6 +163,7 @@ sys_seek (int fd, unsigned position)
 static unsigned
 sys_tell (int fd)
 {
+  // TODO
   return 0;
 }
 
@@ -161,5 +172,6 @@ sys_tell (int fd)
 static void
 sys_close (int fd)
 {
+  // TODO
   return 0;
 }
