@@ -18,3 +18,10 @@ syscall_handler (struct intr_frame *f UNUSED)
   printf ("system call!\n");
   thread_exit ();
 }
+
+/* Project 2*/
+static void
+syscall_exit (int status)
+{
+  thread_exit (status);
+}
