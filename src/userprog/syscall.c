@@ -3,10 +3,14 @@
 #include <syscall-nr.h>
 #include "threads/interrupt.h"
 #include "threads/thread.h"
+#include "threads/synch.h"
+#include "filesys/directory.h"
+#include "filesys/filesys.h"
+#include "filesys/file.h"
 
 static void syscall_handler (struct intr_frame *);
 
-/* System Calls */
+/* System calls */
 static void sys_halt (void);
 static void sys_exit (int status);
 static pid_t sys_exec (const char *cmd_line);
@@ -20,6 +24,8 @@ static int sys_write (int fd, const void *buffer, unsigned size);
 static void sys_seek (int fd, unsigned position);
 static unsigned sys_tell (int fd);
 static void sys_close (int fd);
+
+static struct lock filesys_lock;
 
 void
 syscall_init (void) 
@@ -82,8 +88,12 @@ sys_wait (pid_t pid)
 static int
 sys_create (const char *file, unsigned initial_size)
 {
-  // TODO
-  return 0;
+  bool success;
+
+  lock_acquire (&filesys_lock);
+  success = filesys_create (file, initial_size);
+  lock_release (&filesys_lock);
+  return success;
 }
 
 /* sys_remove() - Deletes the file called file.
