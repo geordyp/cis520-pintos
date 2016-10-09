@@ -102,8 +102,12 @@ sys_create (const char *file, unsigned initial_size)
 static bool
 sys_remove (const char *file)
 {
-  // TODO
-  return 0;
+  bool success;
+
+  lock_acquire (&filesys_lock);
+  success = filesys_remove (file);
+  lock_release (&filesys_lock);
+  return success;
 }
 
 /* sys_open() - Opens the file called file. Returns
