@@ -218,8 +218,14 @@ sys_filesize (int fd)
 static int
 sys_read (int fd, void *buffer, unsigned size)
 {
-  // TODO
-  return 0;
+  struct opened_file *entry = get_entry (fd);
+  int bytes_read;
+
+  lock_acquire (&filesys_lock);
+  bytes_read = file_read (entry->file, buffer, size);
+  lock_release (&filesys_lock);
+
+  return bytes_read;
 }
 
 /* sys_write() - Writes size bytes from buffer
