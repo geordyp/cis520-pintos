@@ -468,6 +468,7 @@ init_thread (struct thread *t, const char *name, int priority)
   strlcpy (t->name, name, sizeof t->name);
   t->stack = (uint8_t *) t + PGSIZE;
   t->priority = priority;
+  list_init (&t->opened_files_list);
   t->available_handle = 2;	/* 0 and 1 are reserved for the console. */
   t->magic = THREAD_MAGIC;
   list_push_back (&all_list, &t->allelem);

@@ -38,6 +38,32 @@ struct opened_file
   
   // The file descriptor
   int fd;
+
+  // Embed LIST_ELEM into this structure (list.h line:103)
+  struct list_elem e;
+}
+
+/* get_entry() - Returns the opened_file
+ * entry with the matching file descriptor.
+ */
+static struct opened_file *
+get_entry (int fd)
+{
+  struct thread *c = thread_current ();
+  struct list_elem *curr_element;
+  for (curr_element = list_begin (&c->opened_files_list);
+	curr_element != list_end (&c->opened_files_list);
+	curr_element = list_next (curr_element))
+  {
+    struct opened_file *entry;
+    entry = list_entry (curr_element, struct opened_file, e)
+    if (entry->fd == fd)
+    {
+      return entry;
+    }
+  }
+
+  return NULL;
 }
 
 void
@@ -142,7 +168,7 @@ sys_open (const char *file)
   entry = malloc (sizeof *entry);
   if (entry != NULL)
   {
-    lock_acquire(&filesys_lock);
+    lock_acquire (&filesys_lock);
     entry->file = filesys_open (file);
     if (entry->file != NULL)
     {
@@ -150,12 +176,13 @@ sys_open (const char *file)
       fd = c->available_handle;
       entry->fd = fd;
       c->available_handle++;
+      list_push_front (&c->opened_files_list, &entry->elem);
     }
     else
     {
       free (entry);
     }
-    lock_release(&filesys_lock);
+    lock_release (&filesys_lock);
   }
   
   return fd;
@@ -167,8 +194,17 @@ sys_open (const char *file)
 static int
 sys_filesize (int fd)
 {
-  // TODO
-  return 0;
+  struct opened_file *entry = get_entry (fd);
+  if (entry != NULL)
+  {
+    lock_acquire (&filesys_lock);
+    int size = file_length (entry->file);
+    lock_release (&filesys_lock);
+    return size;
+  }
+  else {
+    return -1;
+  }
 }
 
 /* sys_read() - Reads size bytes from the file
