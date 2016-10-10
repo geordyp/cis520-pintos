@@ -213,7 +213,7 @@ sys_filesize (int fd)
  * or -1 if the file could not be read.
  */
 static int
-sys_read (int fd)
+sys_read (int fd, void *buffer, unsigned size)
 {
   // TODO
   return 0;
@@ -240,8 +240,10 @@ sys_write (int fd, const void *buffer, unsigned size)
 static void
 sys_seek (int fd, unsigned position)
 {
-  // TODO
-  return 0;
+  struct opened_file *entry = get_entry (fd);
+  lock_acquire (&filesys_lock);
+  file_seek (entry->file, position);
+  lock_release (&filesys_lock);
 }
 
 /* sys_tell() - Returns the position of the
