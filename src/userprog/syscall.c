@@ -134,6 +134,7 @@ sys_create (const char *file, unsigned initial_size)
   lock_acquire (&filesys_lock);
   success = filesys_create (file, initial_size);
   lock_release (&filesys_lock);
+
   return success;
 }
 
@@ -148,6 +149,7 @@ sys_remove (const char *file)
   lock_acquire (&filesys_lock);
   success = filesys_remove (file);
   lock_release (&filesys_lock);
+
   return success;
 }
 
@@ -200,6 +202,7 @@ sys_filesize (int fd)
     lock_acquire (&filesys_lock);
     int size = file_length (entry->file);
     lock_release (&filesys_lock);
+
     return size;
   }
   else {
@@ -241,6 +244,7 @@ static void
 sys_seek (int fd, unsigned position)
 {
   struct opened_file *entry = get_entry (fd);
+
   lock_acquire (&filesys_lock);
   file_seek (entry->file, position);
   lock_release (&filesys_lock);
@@ -254,8 +258,14 @@ sys_seek (int fd, unsigned position)
 static unsigned
 sys_tell (int fd)
 {
-  // TODO
-  return 0;
+  struct opened_file *entry = get_entry (fd);
+  unsigned next_byte;
+
+  lock_acquire (&filesys_lock);
+  next_byte = file_tell (entry->file);
+  lock_release (&filesys_lock);
+
+  return next_byte;
 }
 
 /* sys_close() - Closes file descriptor fd.
