@@ -18,8 +18,11 @@
 #include "threads/thread.h"
 #include "threads/vaddr.h"
 
+#define MAX_ARGS_SIZE 4096
+
 static thread_func start_process NO_RETURN;
 static bool load (const char *cmdline, void (**eip) (void), void **esp);
+static int setup_user_stack (void **esp, char **save_ptr, char *token);
 
 /* Starts a new thread running a user program loaded from
    FILENAME.  The new thread may be scheduled (and may even exit)
@@ -38,6 +41,10 @@ process_execute (const char *file_name)
     return TID_ERROR;
   strlcpy (fn_copy, file_name, PGSIZE);
 
+  /* Save pointer for strtok_r()*/
+  char *save_pointer;
+  file_name = strtok_r((char *)file_name, " ", &save_pointer);
+    
   /* Create a new thread to execute FILE_NAME. */
   tid = thread_create (file_name, PRI_DEFAULT, start_process, fn_copy);
   if (tid == TID_ERROR)
@@ -51,20 +58,33 @@ static void
 start_process (void *file_name_)
 {
   char *file_name = file_name_;
+  char *save_pointer;
+  char *token;
   struct intr_frame if_;
   bool success;
+
+  /* Save pointer for strtok_r()*/
+  /* Get the program name (first token) */
+  
+  token = strtok_r((char *)file_name, " ", &save_pointer);
 
   /* Initialize interrupt frame and load executable. */
   memset (&if_, 0, sizeof if_);
   if_.gs = if_.fs = if_.es = if_.ds = if_.ss = SEL_UDSEG;
   if_.cs = SEL_UCSEG;
   if_.eflags = FLAG_IF | FLAG_MBS;
-  success = load (file_name, &if_.eip, &if_.esp);
+  success = load (token, &if_.eip, &if_.esp);
+  
+  if (success) 
+  {
+    /* Set up the stack for the user program. */
+    setup_user_stack (&if_.esp, &save_pointer, token);
+  }
 
   /* If load failed, quit. */
   palloc_free_page (file_name);
   if (!success) 
-    thread_exit ();
+    thread_exit (0);
 
   /* Start the user process by simulating a return from an
      interrupt, implemented by intr_exit (in
@@ -91,12 +111,25 @@ process_wait (tid_t child_tid UNUSED)
   return -1;
 }
 
+/* TODO: Modify to our own implementation
+   FOr testing purposes only */
+int process_write(int fd, const void *buffer, unsigned size)
+{
+  if (fd == STDOUT_FILENO){
+    putbuf((char *)buffer, (size_t)size);
+    return (int)size;
+  }
+  return -1;
+}
+
 /* Free the current process's resources. */
 void
-process_exit (void)
+process_exit (int status)
 {
   struct thread *cur = thread_current ();
   uint32_t *pd;
+  
+  /* TODO: take in status and use it */
 
   /* Destroy the current process's page directory and switch back
      to the kernel-only page directory. */
@@ -131,6 +164,72 @@ process_activate (void)
      interrupts. */
   tss_update ();
 }
+
+/* Sets up the stack for the user program, returns 1 on success, 0 if the
+   arguments won't fit on the stack */
+static int
+setup_user_stack (void **esp, char **save_ptr, char* token) {
+  int args_pushed;
+  int argc = 0;
+  void* stack_pointer;
+
+  stack_pointer = *esp;
+
+  /* Tokenise file name and push each token on the stack. */
+  do                                                                            
+     {                                                                           
+       size_t len = strlen (token) + 1;                                          
+       stack_pointer = (void*) (((char*) stack_pointer) - len);                  
+       strlcpy ((char*)stack_pointer, token, len);                               
+       argc++;                                   
+       /* Don't push anymore arguments if maximum allowed 
+          have already been pushed. */
+       if (PHYS_BASE - stack_pointer > MAX_ARGS_SIZE)
+          return 0;                              
+       token = strtok_r (NULL, " ", save_ptr);                                  
+     } while (token != NULL);
+  
+  char *arg_ptr = (char*) stack_pointer;                                      
+  
+  /* Round stack pionter down to a multiple of 4. */
+  stack_pointer = (void*) (((intptr_t) stack_pointer) & 0xfffffffc);
+
+  /* Push null sentinel. */
+  stack_pointer = (((char**) stack_pointer) - 1);
+  *((char*)(stack_pointer)) = 0;
+
+  /* Push pointers to arguments. */
+  args_pushed = 0;                                                              
+  while (args_pushed < argc)                                                    
+     {                                                                           
+       while (*(arg_ptr - 1) != '\0')                                            
+         ++arg_ptr;                                                              
+       stack_pointer = (((char**) stack_pointer) - 1);                           
+       *((char**) stack_pointer) = arg_ptr;                                      
+       ++args_pushed;    
+       ++arg_ptr;                                                        
+     }
+
+  /* Push argv. */
+  char** first_arg_pointer = (char**) stack_pointer;
+  stack_pointer = (((char**) stack_pointer) - 1);
+  *((char***) stack_pointer) = first_arg_pointer;
+
+
+  /* Push argc. */
+  int* stack_int_pointer = (int*) stack_pointer;
+  --stack_int_pointer;
+  *stack_int_pointer = argc;
+  stack_pointer = (void*) stack_int_pointer;
+
+  /* Push null sentinel. */
+  stack_pointer = (((void**) stack_pointer) - 1);
+  *((void**)(stack_pointer)) = 0;
+
+  *esp = stack_pointer;
+  return 1;
+}
+
 
 /* We load ELF binaries.  The following definitions are taken
    from the ELF specification, [ELF1], more-or-less verbatim.  */
