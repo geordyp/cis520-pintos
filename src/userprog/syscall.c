@@ -69,6 +69,8 @@ sys_halt (void)
 static void
 sys_exit (int status)
 {
+  // free the current process' resources
+  process_exit ();
   thread_exit (status);
 }
 
