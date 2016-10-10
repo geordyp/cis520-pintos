@@ -27,6 +27,19 @@ static void sys_close (int fd);
 
 static struct lock filesys_lock;
 
+/* file_entry - When a file is opened, an
+ * entry is created to represent that file and
+ * store the information about that opened file.
+ */
+struct opened_file
+{
+  // The file opened
+  struct file *file;
+  
+  // The file descriptor
+  int fd;
+}
+
 void
 syscall_init (void) 
 {
@@ -118,8 +131,32 @@ sys_remove (const char *file)
 static int
 sys_open (const char *file)
 {
-  // TODO
-  return 0;
+  // create a new entry
+  struct opened_file *entry;
+  
+  // file descriptor
+  int fd = -1;
+
+  entry = malloc (sizeof *entry);
+  if (entry != NULL)
+  {
+    lock_acquire(&filesys_lock);
+    entry->file = filesys_open (file);
+    if (entry->file != NULL)
+    {
+      struct thread *c = thread_current ();
+      fd = c->available_handle;
+      entry->fd = fd;
+      c->available_handle++;
+    }
+    else
+    {
+      free (entry);
+    }
+    lock_release(&filesys_lock);
+  }
+  
+  return fd;
 }
 
 /* sys_filesize() - Returns the size, in bytes,
