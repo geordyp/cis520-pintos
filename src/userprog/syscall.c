@@ -40,7 +40,7 @@ struct opened_file
   int fd;
 
   // Embed LIST_ELEM into this structure (list.h line:103)
-  struct list_elem e;
+  struct list_elem element;
 }
 
 /* get_entry() - Returns the opened_file
@@ -56,7 +56,7 @@ get_entry (int fd)
 	curr_element = list_next (curr_element))
   {
     struct opened_file *entry;
-    entry = list_entry (curr_element, struct opened_file, e)
+    entry = list_entry (curr_element, struct opened_file, element)
     if (entry->fd == fd)
     {
       return entry;
@@ -178,7 +178,7 @@ sys_open (const char *file)
       fd = c->available_handle;
       entry->fd = fd;
       c->available_handle++;
-      list_push_front (&c->opened_files_list, &entry->elem);
+      list_push_front (&c->opened_files_list, &entry->element);
     }
     else
     {
@@ -273,6 +273,12 @@ sys_tell (int fd)
 static void
 sys_close (int fd)
 {
-  // TODO
-  return 0;
+  struct opened_file *entry = get_entry (fd);
+
+  lock_acquire (&filesys_lock);
+  file_close (entry->file);
+  lock_release (&filesys_lock);
+  
+  list_remove (entry->element);
+  free (entry);
 }
