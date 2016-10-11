@@ -100,16 +100,20 @@ sys_exit (int status)
   thread_exit (status);
 }
 
-/* sys_exec() - Runs the executable whoe name is
+/* sys_exec() - Runs the executable whose name is
  * given in cmd_line, passing any given
- * arguments, and returns the new process's
- * program id (pid).
+ * arguments, and returns the new process's id.
  */
-static pid_t
+static tid_t
 sys_exec (const char *cmd_line)
 {
-  // TODO
-  return 0;
+  tid_t tid;
+
+  lock_acquire (&filesys_lock);
+  tid = process_execute (cmd_line);
+  lock_release (&filesys_lock);
+
+  return tid;
 }
 
 /* sys_wait() - Waits for a child process pid and
