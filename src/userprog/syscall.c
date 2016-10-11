@@ -237,8 +237,14 @@ sys_read (int fd, void *buffer, unsigned size)
 static int
 sys_write (int fd, const void *buffer, unsigned size)
 {
-  // TODO
-  return 0;
+  struct opened_file *entry = get_entry (fd);
+  int bytes_written;
+
+  lock_acquire (&filesys_lock);
+  bytes_written = file_write (entry->file, buffer, size);
+  lock_release (&filesys_lock);
+
+  return bytes_written;
 }
 
 /* sys_seek() - Changes the next byte to be
