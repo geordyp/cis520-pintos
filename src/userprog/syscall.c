@@ -27,7 +27,7 @@ static void sys_close (int fd);
 
 static struct lock filesys_lock;
 
-/* file_entry - When a file is opened, an
+/* opened_file - When a file is opened, an
  * entry is created to represent that file and
  * store the information about that opened file.
  */
