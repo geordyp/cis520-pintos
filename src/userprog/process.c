@@ -33,6 +33,7 @@ process_execute (const char *file_name)
 {
   char *fn_copy;
   tid_t tid;
+  char *save_pointer;   /* Save pointer for strtok_r()*/
 
   /* Make a copy of FILE_NAME.
      Otherwise there's a race between the caller and load(). */
@@ -40,10 +41,8 @@ process_execute (const char *file_name)
   if (fn_copy == NULL)
     return TID_ERROR;
   strlcpy (fn_copy, file_name, PGSIZE);
-
-  /* Save pointer for strtok_r()*/
-  char *save_pointer;
-  file_name = strtok_r((char *)file_name, " ", &save_pointer);
+  
+  file_name = strtok_r(file_name, " ", &save_pointer);
     
   /* Create a new thread to execute FILE_NAME. */
   tid = thread_create (file_name, PRI_DEFAULT, start_process, fn_copy);
@@ -66,7 +65,7 @@ start_process (void *file_name_)
   /* Save pointer for strtok_r()*/
   /* Get the program name (first token) */
   
-  token = strtok_r((char *)file_name, " ", &save_pointer);
+  token = strtok_r(file_name, " ", &save_pointer);
 
   /* Initialize interrupt frame and load executable. */
   memset (&if_, 0, sizeof if_);
@@ -108,7 +107,7 @@ start_process (void *file_name_)
 int
 process_wait (tid_t child_tid UNUSED) 
 {
-  return -1;
+  while(true);
 }
 
 /* TODO: Modify to our own implementation
@@ -536,7 +535,7 @@ setup_stack (void **esp)
     {
       success = install_page (((uint8_t *) PHYS_BASE) - PGSIZE, kpage, true);
       if (success)
-        *esp = PHYS_BASE;
+        *esp = PHYS_BASE - 24; // Couldn't get 12 to work
       else
         palloc_free_page (kpage);
     }

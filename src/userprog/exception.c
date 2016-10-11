@@ -154,7 +154,7 @@ page_fault (struct intr_frame *f)
 
  /* Try to access a kernel address in user mode. */
   if ( (user && !is_user_vaddr (fault_addr) ))
-      syscall_exit (-1);
+      syscall_ext_exit (-1);
   if (!user) 
   {
     f->eip = (void *) f->eax;
