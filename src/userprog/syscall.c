@@ -14,7 +14,7 @@ static void syscall_handler (struct intr_frame *);
 static void sys_halt (void);
 static void sys_exit (int status);
 static tid_t sys_exec (const char *cmd_line);
-static int sys_wait (pid_t pid);
+static int sys_wait (tid_t child);
 static bool sys_create (const char *file, unsigned initial_size);
 static bool sys_remove (const char *file);
 static int sys_open (const char *file);
@@ -41,7 +41,7 @@ struct opened_file
 
   // Embed LIST_ELEM into this structure (list.h line:103)
   struct list_elem element;
-}
+};
 
 /* get_entry() - Returns the opened_file
  * entry with the matching file descriptor.
@@ -56,7 +56,7 @@ get_entry (int fd)
 	curr_element = list_next (curr_element))
   {
     struct opened_file *entry;
-    entry = list_entry (curr_element, struct opened_file, element)
+    entry = list_entry (curr_element, struct opened_file, element);
     if (entry->fd == fd)
     {
       return entry;
@@ -97,7 +97,7 @@ sys_exit (int status)
 {
   // free the current process' resources
   process_exit ();
-  thread_exit (status);
+  thread_exit ();
 }
 
 /* sys_exec() - Runs the executable whose name is
@@ -120,10 +120,10 @@ sys_exec (const char *cmd_line)
  * retrieves the child's exit status.
  */
 static int
-sys_wait (pid_t pid)
+sys_wait (tid_t child)
 {
   // TODO
-  return 0;
+  return process_wait (child);
 }
 
 /* sys_create() - Creates a new file called file
@@ -295,6 +295,6 @@ sys_close (int fd)
   file_close (entry->file);
   lock_release (&filesys_lock);
   
-  list_remove (entry->element);
+  list_remove (&entry->element);
   free (entry);
 }
