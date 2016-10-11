@@ -42,6 +42,7 @@ process_execute (const char *file_name)
     return TID_ERROR;
   strlcpy (fn_copy, file_name, PGSIZE);
   
+  // Raw commands
   file_name = strtok_r(file_name, " ", &save_pointer);
     
   /* Create a new thread to execute FILE_NAME. */
@@ -164,8 +165,8 @@ process_activate (void)
   tss_update ();
 }
 
-/* Sets up the stack for the user program, returns 1 on success, 0 if the
-   arguments won't fit on the stack */
+/* Sets up the stack for the user program.
+   Returns 0 if successful, else return -1 */
 static int
 setup_user_stack (void **esp, char **save_ptr, char* token) {
   int args_pushed;
@@ -173,8 +174,8 @@ setup_user_stack (void **esp, char **save_ptr, char* token) {
   void* stack_pointer;
 
   stack_pointer = *esp;
-
-  /* Tokenise file name and push each token on the stack. */
+  
+  /* Separate "words" by tokenezing until we reach the end of char */
   do                                                                            
      {                                                                           
        size_t len = strlen (token) + 1;                                          
@@ -184,7 +185,7 @@ setup_user_stack (void **esp, char **save_ptr, char* token) {
        /* Don't push anymore arguments if maximum allowed 
           have already been pushed. */
        if (PHYS_BASE - stack_pointer > MAX_ARGS_SIZE)
-          return 0;                              
+          return -1;                              
        token = strtok_r (NULL, " ", save_ptr);                                  
      } while (token != NULL);
   
@@ -226,7 +227,7 @@ setup_user_stack (void **esp, char **save_ptr, char* token) {
   *((void**)(stack_pointer)) = 0;
 
   *esp = stack_pointer;
-  return 1;
+  return 0;
 }
 
 
@@ -299,6 +300,28 @@ static bool load_segment (struct file *file, off_t ofs, uint8_t *upage,
                           uint32_t read_bytes, uint32_t zero_bytes,
                           bool writable);
 
+/* Extract arguments */
+static void
+extract_args(char *command, char *argc, char * argv[])
+{
+  char *token; /* each token from strtok_r */
+  char *save_pointer;
+  argv[0] = strtok_r(command, " ", &save_pointer);
+  *argc = 1; // Set it to 1 because of the above
+  
+  /* Now that we are left with the rest of the command, 
+     parse them and pass them to their approriate variable
+     namely argv and argc */
+      
+  while ((token == strtok_r(NULL, " ", &save_pointer)) != NULL)
+  {
+    *argc++;
+    argv[*argc] = token;
+  }
+  printf(argv);
+}
+
+
 /* Loads an ELF executable from FILE_NAME into the current thread.
    Stores the executable's entry point into *EIP
    and its initial stack pointer into *ESP.
@@ -312,6 +335,13 @@ load (const char *file_name, void (**eip) (void), void **esp)
   off_t file_ofs;
   bool success = false;
   int i;
+  
+  char command;
+  strlcpy(file_name, command, strlen(command));
+  char *argv;
+  int argc;
+  extract_args(command, &argc, argv);
+
 
   /* Allocate and activate page directory. */
   t->pagedir = pagedir_create ();
@@ -320,7 +350,7 @@ load (const char *file_name, void (**eip) (void), void **esp)
   process_activate ();
 
   /* Open executable file. */
-  file = filesys_open (file_name);
+  file = filesys_open (argv[0]);
   if (file == NULL) 
     {
       printf ("load: %s: open failed\n", file_name);
@@ -410,8 +440,16 @@ load (const char *file_name, void (**eip) (void), void **esp)
 
  done:
   /* We arrive here whether the load is successful or not. */
-  file_close (file);
-  return success;
+  if (success) 
+  {
+  	t->executable = file;
+  	file_deny_write(file);
+  } 
+  else 
+  { 
+  	file_close (file);
+  	return success;
+  }
 }
 
 /* load() helpers. */

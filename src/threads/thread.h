@@ -92,6 +92,7 @@ struct thread
     uint32_t *pagedir;                  /* Page directory. */
     struct list opened_files_list;	/* List of files that have been opened. */
     int available_handle;		/* The next available handle for opened files. */
+    struct file *executable;	/* File referring to the executable */
 #endif
 
     /* Owned by thread.c. */
