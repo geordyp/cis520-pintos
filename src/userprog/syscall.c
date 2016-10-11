@@ -13,7 +13,7 @@ static void syscall_handler (struct intr_frame *);
 /* System calls */
 static void sys_halt (void);
 static void sys_exit (int status);
-static pid_t sys_exec (const char *cmd_line);
+static tid_t sys_exec (const char *cmd_line);
 static int sys_wait (pid_t pid);
 static bool sys_create (const char *file, unsigned initial_size);
 static bool sys_remove (const char *file);
@@ -130,7 +130,7 @@ sys_wait (pid_t pid)
  * initially initial_size bytes in size. 
  * Returns true if successful, false otherwise.
  */
-static int
+static bool
 sys_create (const char *file, unsigned initial_size)
 {
   bool success;
